@@ -1,7 +1,5 @@
 # action-yamler
 
-## GitHub Action
-
 This GitHub Action helps to manipulate yaml files easily.
 
 ## Inputs
