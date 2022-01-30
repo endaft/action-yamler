@@ -1,4 +1,4 @@
-name: "gha-yamler"
+name: "action-yamler"
 description: "A GitHub Action for easily manipulating yaml files."
 branding:
   icon: edit
