@@ -1,5 +1,9 @@
 name: "gha-yamler"
 description: "A GitHub Action for easily manipulating yaml files."
+branding:
+  icon: edit
+  color: blue
+
 inputs:
   file:
     description: "The path to a yaml file"
