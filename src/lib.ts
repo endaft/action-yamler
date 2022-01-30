@@ -27,16 +27,21 @@ export function handleAction() {
 
     var node = yaml;
     const parts = opts.path.split('.');
-    while (parts.length > 1) {
+    while (parts.length > 1 && !!node) {
       const part = parts.shift();
       node = node[part];
     }
     const part = parts.shift();
     const pathValue = node[part];
 
-    if (opts.get) core.setOutput('value_old', pathValue);
+    if (opts.get) {
+      core.setOutput('value_old', pathValue);
+      core.info(`Found "${pathValue}" @ "${opts.path}"`);
+    }
     if (!!opts.set) {
-      node[part] = opts.append ? `${node[part]}${opts.set}` : opts.set;
+      const setValue = opts.append ? `${node[part]}${opts.set}` : opts.set;
+      node[part] = setValue;
+      core.info(`Set "${setValue}" @ "${opts.path}"`);
       if (opts.get) core.setOutput('value_new', node[part]);
     }
     fs.writeFileSync(opts.file, YAML.stringify(yaml));

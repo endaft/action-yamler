@@ -1555,6 +1555,59 @@ exports.debug = debug; // for test
 
 /***/ }),
 
+/***/ 730:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.handleAction = void 0;
+const fs = __nccwpck_require__(147);
+const YAML = __nccwpck_require__(603);
+const core = __nccwpck_require__(186);
+function getOptions() {
+    return {
+        file: core.getInput('file', { required: true }),
+        path: core.getInput('path', { required: true }),
+        set: core.getInput('set', { required: false }),
+        get: core.getBooleanInput('get', { required: false }),
+        append: core.getBooleanInput('append', { required: false }),
+    };
+}
+function handleAction() {
+    try {
+        const opts = getOptions();
+        const yaml = YAML.parse(fs.readFileSync(opts.file, 'utf-8'));
+        var node = yaml;
+        const parts = opts.path.split('.');
+        while (parts.length > 1 && !!node) {
+            const part = parts.shift();
+            node = node[part];
+        }
+        const part = parts.shift();
+        const pathValue = node[part];
+        if (opts.get) {
+            core.setOutput('value_old', pathValue);
+            core.info(`Found "${pathValue}" @ "${opts.path}"`);
+        }
+        if (!!opts.set) {
+            const setValue = opts.append ? `${node[part]}${opts.set}` : opts.set;
+            node[part] = setValue;
+            core.info(`Set "${setValue}" @ "${opts.path}"`);
+            if (opts.get)
+                core.setOutput('value_new', node[part]);
+        }
+        fs.writeFileSync(opts.file, YAML.stringify(yaml));
+    }
+    catch (error) {
+        core.setFailed(error.message);
+    }
+}
+exports.handleAction = handleAction;
+
+
+/***/ }),
+
 /***/ 491:
 /***/ ((module) => {
 
@@ -8299,17 +8352,6 @@ module.exports = __nccwpck_require__(83).YAML
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -8319,57 +8361,11 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
-// ESM COMPAT FLAG
-__nccwpck_require__.r(__webpack_exports__);
+var exports = __webpack_exports__;
 
-// EXTERNAL MODULE: external "fs"
-var external_fs_ = __nccwpck_require__(147);
-// EXTERNAL MODULE: ./node_modules/yaml/index.js
-var node_modules_yaml = __nccwpck_require__(603);
-// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __nccwpck_require__(186);
-;// CONCATENATED MODULE: ./src/lib.ts
-
-
-
-function getOptions() {
-    return {
-        file: core.getInput('file', { required: true }),
-        path: core.getInput('path', { required: true }),
-        set: core.getInput('set', { required: false }),
-        get: core.getBooleanInput('get', { required: false }),
-        append: core.getBooleanInput('append', { required: false }),
-    };
-}
-function handleAction() {
-    try {
-        const opts = getOptions();
-        const yaml = node_modules_yaml.parse(external_fs_.readFileSync(opts.file, 'utf-8'));
-        var node = yaml;
-        const parts = opts.path.split('.');
-        while (parts.length > 1) {
-            const part = parts.shift();
-            node = node[part];
-        }
-        const part = parts.shift();
-        const pathValue = node[part];
-        if (opts.get)
-            core.setOutput('value_old', pathValue);
-        if (!!opts.set) {
-            node[part] = opts.append ? `${node[part]}${opts.set}` : opts.set;
-            if (opts.get)
-                core.setOutput('value_new', node[part]);
-        }
-        external_fs_.writeFileSync(opts.file, node_modules_yaml.stringify(yaml));
-    }
-    catch (error) {
-        core.setFailed(error.message);
-    }
-}
-
-;// CONCATENATED MODULE: ./src/index.ts
-
-handleAction();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const lib_1 = __nccwpck_require__(730);
+(0, lib_1.handleAction)();
 
 })();
 
