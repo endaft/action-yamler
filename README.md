@@ -2,6 +2,21 @@
 
 This GitHub Action helps to manipulate yaml files easily.
 
+## Example
+
+This example demonstrates using this action to update the `version` in a `pubspec.yaml` by appending `-dev.NNNNN`.
+
+```yaml
+- name: ✍🏼 version
+  uses: endaft/action-yamler@v1.0.2
+  with:
+    file: ./pubspec.yaml
+    path: version
+    set: -dev.${{ github.run_number }}
+    get: true
+    append: true
+```
+
 ## Inputs
 
 | name       | required | description                                                           | default |
