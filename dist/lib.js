@@ -1,6 +1,9 @@
-import * as fs from 'fs';
-import * as YAML from 'yaml';
-import * as core from '@actions/core';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.handleAction = void 0;
+const fs = require("fs");
+const YAML = require("yaml");
+const core = require("@actions/core");
 function getOptions() {
     return {
         file: core.getInput('file', { required: true }),
@@ -10,7 +13,7 @@ function getOptions() {
         append: core.getBooleanInput('append', { required: false }),
     };
 }
-export function handleAction() {
+function handleAction() {
     try {
         const opts = getOptions();
         const yaml = YAML.parse(fs.readFileSync(opts.file, 'utf-8'));
@@ -35,3 +38,4 @@ export function handleAction() {
         core.setFailed(error.message);
     }
 }
+exports.handleAction = handleAction;
