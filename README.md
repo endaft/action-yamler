@@ -8,7 +8,7 @@ This example demonstrates using this action to update the `version` in a `pubspe
 
 ```yaml
 - name: ✍🏼 version
-  uses: endaft/action-yamler@v1.0.2
+  uses: endaft/action-yamler@v1.0.5
   with:
     file: ./pubspec.yaml
     path: version
