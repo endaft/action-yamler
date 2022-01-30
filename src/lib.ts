@@ -7,6 +7,7 @@ type YamlerOptions = {
   path: string;
   set: any;
   get: boolean;
+  append: boolean;
 };
 
 function getOptions(): YamlerOptions {
@@ -15,6 +16,7 @@ function getOptions(): YamlerOptions {
     path: core.getInput('path', { required: true }),
     set: core.getInput('set', { required: false }),
     get: core.getBooleanInput('get', { required: false }),
+    append: core.getBooleanInput('append', { required: false }),
   };
 }
 
@@ -34,7 +36,7 @@ export function handleAction() {
 
     if (opts.get) core.setOutput('value_old', pathValue);
     if (!!opts.set) {
-      node[part] = opts.set;
+      node[part] = opts.append ? `${node[part]}${opts.set}` : opts.set;
       if (opts.get) core.setOutput('value_new', node[part]);
     }
     fs.writeFileSync(opts.file, YAML.stringify(yaml));

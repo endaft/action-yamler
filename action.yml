@@ -18,6 +18,10 @@ inputs:
     description: "Whether or not to get the value into the output."
     required: false
     default: "true"
+  append:
+    description: "Whether or not the set value is appended or put at the path."
+    required: false
+    default: "false"
 outputs:
   value_old:
     description: "If get is true, holds the value found at path prior to changing it, or an empty string if the path was not found."
