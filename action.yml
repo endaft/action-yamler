@@ -1,0 +1,24 @@
+name: "gha-yamler"
+description: "A GitHub Action for easily manipulating yaml files."
+inputs:
+  file:
+    description: "The path to a yaml file"
+    required: true
+  path:
+    description: "The dotted yaml path to edit. Ex: object.item.name or list.0.name"
+    required: true
+  set:
+    description: "The value to set at the path."
+    required: false
+  get:
+    description: "Whether or not to get the value into the output."
+    required: false
+    default: "true"
+outputs:
+  value_old:
+    description: "If get is true, holds the value found at path prior to changing it, or an empty string if the path was not found."
+  value_new:
+    description: "If get is true, holds the value set at path after changing it."
+runs:
+  using: "node16"
+  main: "dist/index.js"
