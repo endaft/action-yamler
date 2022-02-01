@@ -8,15 +8,18 @@ type YamlerOptions = {
   set: any;
   get: boolean;
   append: boolean;
+  workspace: string;
 };
 
 function getOptions(): YamlerOptions {
+  const inAct = !!process.env.ACT;
   return {
     file: core.getInput('file', { required: true }),
     path: core.getInput('path', { required: true }),
     set: core.getInput('set', { required: false }),
     get: core.getBooleanInput('get', { required: false }),
     append: core.getBooleanInput('append', { required: false }),
+    workspace: `${process.env.GITHUB_WORKSPACE}${inAct ? '/action-yamler' : ''}`,
   };
 }
 

@@ -1566,12 +1566,14 @@ const fs = __nccwpck_require__(147);
 const YAML = __nccwpck_require__(603);
 const core = __nccwpck_require__(186);
 function getOptions() {
+    const inAct = !!process.env.ACT;
     return {
         file: core.getInput('file', { required: true }),
         path: core.getInput('path', { required: true }),
         set: core.getInput('set', { required: false }),
         get: core.getBooleanInput('get', { required: false }),
         append: core.getBooleanInput('append', { required: false }),
+        workspace: `${process.env.GITHUB_WORKSPACE}${inAct ? '/action-yamler' : ''}`,
     };
 }
 function handleAction() {
