@@ -28,5 +28,5 @@ outputs:
   value_new:
     description: "If get is true, holds the value set at path after changing it."
 runs:
-  using: "node12"
+  using: "node16"
   main: "dist/index.js"
