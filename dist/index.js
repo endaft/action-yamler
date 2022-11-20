@@ -140,7 +140,6 @@ const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(5278);
 const os = __importStar(__nccwpck_require__(2037));
 const path = __importStar(__nccwpck_require__(1017));
-const uuid_1 = __nccwpck_require__(5840);
 const oidc_utils_1 = __nccwpck_require__(8041);
 /**
  * The code to exit an action
@@ -170,20 +169,9 @@ function exportVariable(name, val) {
     process.env[name] = convertedVal;
     const filePath = process.env['GITHUB_ENV'] || '';
     if (filePath) {
-        const delimiter = `ghadelimiter_${uuid_1.v4()}`;
-        // These should realistically never happen, but just in case someone finds a way to exploit uuid generation let's not allow keys or values that contain the delimiter.
-        if (name.includes(delimiter)) {
-            throw new Error(`Unexpected input: name should not contain the delimiter "${delimiter}"`);
-        }
-        if (convertedVal.includes(delimiter)) {
-            throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
-        }
-        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
-        file_command_1.issueCommand('ENV', commandValue);
+        return file_command_1.issueFileCommand('ENV', file_command_1.prepareKeyValueMessage(name, val));
     }
-    else {
-        command_1.issueCommand('set-env', { name }, convertedVal);
-    }
+    command_1.issueCommand('set-env', { name }, convertedVal);
 }
 exports.exportVariable = exportVariable;
 /**
@@ -201,7 +189,7 @@ exports.setSecret = setSecret;
 function addPath(inputPath) {
     const filePath = process.env['GITHUB_PATH'] || '';
     if (filePath) {
-        file_command_1.issueCommand('PATH', inputPath);
+        file_command_1.issueFileCommand('PATH', inputPath);
     }
     else {
         command_1.issueCommand('add-path', {}, inputPath);
@@ -241,7 +229,10 @@ function getMultilineInput(name, options) {
     const inputs = getInput(name, options)
         .split('\n')
         .filter(x => x !== '');
-    return inputs;
+    if (options && options.trimWhitespace === false) {
+        return inputs;
+    }
+    return inputs.map(input => input.trim());
 }
 exports.getMultilineInput = getMultilineInput;
 /**
@@ -274,8 +265,12 @@ exports.getBooleanInput = getBooleanInput;
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function setOutput(name, value) {
+    const filePath = process.env['GITHUB_OUTPUT'] || '';
+    if (filePath) {
+        return file_command_1.issueFileCommand('OUTPUT', file_command_1.prepareKeyValueMessage(name, value));
+    }
     process.stdout.write(os.EOL);
-    command_1.issueCommand('set-output', { name }, value);
+    command_1.issueCommand('set-output', { name }, utils_1.toCommandValue(value));
 }
 exports.setOutput = setOutput;
 /**
@@ -404,7 +399,11 @@ exports.group = group;
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function saveState(name, value) {
-    command_1.issueCommand('save-state', { name }, value);
+    const filePath = process.env['GITHUB_STATE'] || '';
+    if (filePath) {
+        return file_command_1.issueFileCommand('STATE', file_command_1.prepareKeyValueMessage(name, value));
+    }
+    command_1.issueCommand('save-state', { name }, utils_1.toCommandValue(value));
 }
 exports.saveState = saveState;
 /**
@@ -470,13 +469,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.issueCommand = void 0;
+exports.prepareKeyValueMessage = exports.issueFileCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const fs = __importStar(__nccwpck_require__(7147));
 const os = __importStar(__nccwpck_require__(2037));
+const uuid_1 = __nccwpck_require__(5840);
 const utils_1 = __nccwpck_require__(5278);
-function issueCommand(command, message) {
+function issueFileCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
     if (!filePath) {
         throw new Error(`Unable to find environment variable for file command ${command}`);
@@ -488,7 +488,22 @@ function issueCommand(command, message) {
         encoding: 'utf8'
     });
 }
-exports.issueCommand = issueCommand;
+exports.issueFileCommand = issueFileCommand;
+function prepareKeyValueMessage(key, value) {
+    const delimiter = `ghadelimiter_${uuid_1.v4()}`;
+    const convertedValue = utils_1.toCommandValue(value);
+    // These should realistically never happen, but just in case someone finds a
+    // way to exploit uuid generation let's not allow keys or values that contain
+    // the delimiter.
+    if (key.includes(delimiter)) {
+        throw new Error(`Unexpected input: name should not contain the delimiter "${delimiter}"`);
+    }
+    if (convertedValue.includes(delimiter)) {
+        throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
+    }
+    return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
+}
+exports.prepareKeyValueMessage = prepareKeyValueMessage;
 //# sourceMappingURL=file-command.js.map
 
 /***/ }),
@@ -2997,7 +3012,7 @@ function composeNode(ctx, token, props, onError) {
         node.srcToken = token;
     return node;
 }
-function composeEmptyNode(ctx, offset, before, pos, { spaceBefore, comment, anchor, tag }, onError) {
+function composeEmptyNode(ctx, offset, before, pos, { spaceBefore, comment, anchor, tag, end }, onError) {
     const token = {
         type: 'scalar',
         offset: utilEmptyScalarPosition.emptyScalarPosition(offset, before, pos),
@@ -3012,8 +3027,10 @@ function composeEmptyNode(ctx, offset, before, pos, { spaceBefore, comment, anch
     }
     if (spaceBefore)
         node.spaceBefore = true;
-    if (comment)
+    if (comment) {
         node.comment = comment;
+        node.range[2] = end;
+    }
     return node;
 }
 function composeAlias({ options }, { offset, source, end }, onError) {
@@ -3374,6 +3391,7 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError) {
     if (ctx.atRoot)
         ctx.atRoot = false;
     let offset = bm.offset;
+    let commentEnd = null;
     for (const collItem of bm.items) {
         const { start, key, sep, value } = collItem;
         // key properties
@@ -3393,7 +3411,7 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError) {
                     onError(offset, 'BAD_INDENT', startColMsg);
             }
             if (!keyProps.anchor && !keyProps.tag && !sep) {
-                // TODO: assert being at last item?
+                commentEnd = keyProps.end;
                 if (keyProps.comment) {
                     if (map.comment)
                         map.comment += '\n' + keyProps.comment;
@@ -3463,7 +3481,9 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError) {
             map.items.push(pair);
         }
     }
-    map.range = [bm.offset, offset, offset];
+    if (commentEnd && commentEnd < offset)
+        onError(commentEnd, 'IMPOSSIBLE', 'Map comment with trailing content');
+    map.range = [bm.offset, offset, commentEnd ?? offset];
     return map;
 }
 
@@ -3691,6 +3711,7 @@ function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError) {
     if (ctx.atRoot)
         ctx.atRoot = false;
     let offset = bs.offset;
+    let commentEnd = null;
     for (const { start, value } of bs.items) {
         const props = resolveProps.resolveProps(start, {
             indicator: 'seq-item-ind',
@@ -3699,16 +3720,15 @@ function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError) {
             onError,
             startOnNewline: true
         });
-        offset = props.end;
         if (!props.found) {
             if (props.anchor || props.tag || value) {
                 if (value && value.type === 'block-seq')
-                    onError(offset, 'BAD_INDENT', 'All sequence items must start at the same column');
+                    onError(props.end, 'BAD_INDENT', 'All sequence items must start at the same column');
                 else
                     onError(offset, 'MISSING_CHAR', 'Sequence item without - indicator');
             }
             else {
-                // TODO: assert being at last item?
+                commentEnd = props.end;
                 if (props.comment)
                     seq.comment = props.comment;
                 continue;
@@ -3716,13 +3736,13 @@ function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError) {
         }
         const node = value
             ? composeNode(ctx, value, props, onError)
-            : composeEmptyNode(ctx, offset, start, null, props, onError);
+            : composeEmptyNode(ctx, props.end, start, null, props, onError);
         if (ctx.schema.compat)
             utilFlowIndentCheck.flowIndentCheck(bs.indent, value, onError);
         offset = node.range[2];
         seq.items.push(node);
     }
-    seq.range = [bs.offset, offset, offset];
+    seq.range = [bs.offset, offset, commentEnd ?? offset];
     return seq;
 }
 
@@ -5023,7 +5043,7 @@ function createNode(value, tagName, ctx) {
     if (value instanceof String ||
         value instanceof Number ||
         value instanceof Boolean ||
-        (typeof BigInt === 'function' && value instanceof BigInt) // not supported everywhere
+        (typeof BigInt !== 'undefined' && value instanceof BigInt) // not supported everywhere
     ) {
         // https://tc39.es/ecma262/#sec-serializejsonproperty
         value = value.valueOf();
@@ -9606,7 +9626,8 @@ class YAMLSet extends YAMLMap.YAMLMap {
         let pair;
         if (Node.isPair(key))
             pair = key;
-        else if (typeof key === 'object' &&
+        else if (key &&
+            typeof key === 'object' &&
             'key' in key &&
             'value' in key &&
             key.value === null)
