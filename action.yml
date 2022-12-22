@@ -10,7 +10,7 @@ inputs:
     required: true
   path:
     description: "The dotted yaml path to edit. Ex: object.item.name or list.0.name"
-    required: true
+    required: false
   set:
     description: "The value to set at the path."
     required: false
@@ -20,6 +20,10 @@ inputs:
     default: "true"
   append:
     description: "Whether or not the set value is appended or put at the path."
+    required: false
+    default: "false"
+  flat:
+    description: "Set this to true to work with a single value file. Ex: `workspace/version` contains `1.0.2`."
     required: false
     default: "false"
 outputs:
