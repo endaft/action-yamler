@@ -43,7 +43,7 @@ jobs:
             echo "GIT_IS_DIRTY=false" >> $GITHUB_ENV
           fi
 
-      - name: 🏷️ Tag
+      - name: 🏷️ Version
         if: env.GIT_IS_DIRTY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -52,17 +52,22 @@ jobs:
           IFS=. read -r v1 v2 v3 <<< "${LATEST_TAG}"    # split into (integer) components
           ((v3++))                                      # do the math
           LATEST_TAG="${v1}.${v2}.${v3}"
-          echo "Updated tag to $LATEST_TAG"
-          echo "Updating dist js"
-          git commit -a -m "chore: updates dist js" --author="github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-          echo "Pushing tag $LATEST_TAG"
+          echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_ENV
+
+      - name: 🏷️ Tag
+        if: env.GIT_IS_DIRTY == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           git tag -f "$LATEST_TAG" -m "Version $LATEST_TAG"
-          echo "Pushing tag latest"
           git tag -f latest -m "The latest version"
 
       - name: 📌 Commit & Push
         if: env.GIT_IS_DIRTY == 'true'
         uses: GuillaumeFalourd/git-commit-push@v1.3
         with:
+          name: github-actions[bot]
+          email: github-actions[bot]@users.noreply.github.com
+          commit_message: "chore: updates dist js"
           tags: true
           force: true
