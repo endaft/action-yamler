@@ -52,11 +52,9 @@ jobs:
           IFS=. read -r v1 v2 v3 <<< "${LATEST_TAG}"    # split into (integer) components
           ((v3++))                                      # do the math
           LATEST_TAG="${v1}.${v2}.${v3}"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git commit -a -m "chore: updates dist js"
-          git tag "$LATEST_TAG" -m "Version $LATEST_TAG"
-          git tag latest -m "The latest version"
+          git commit -a -m "chore: updates dist js" --author="github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          git tag -f "$LATEST_TAG" -m "Version $LATEST_TAG"
+          git tag -f latest -m "The latest version"
 
       - name: 📌 Commit & Push
         if: env.GIT_IS_DIRTY == 'true'
