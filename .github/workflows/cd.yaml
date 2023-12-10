@@ -52,8 +52,12 @@ jobs:
           IFS=. read -r v1 v2 v3 <<< "${LATEST_TAG}"    # split into (integer) components
           ((v3++))                                      # do the math
           LATEST_TAG="${v1}.${v2}.${v3}"
+          echo "Updated tag to $LATEST_TAG"
+          echo "Updating dist js"
           git commit -a -m "chore: updates dist js" --author="github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          echo "Pushing tag $LATEST_TAG"
           git tag -f "$LATEST_TAG" -m "Version $LATEST_TAG"
+          echo "Pushing tag latest"
           git tag -f latest -m "The latest version"
 
       - name: 📌 Commit & Push
