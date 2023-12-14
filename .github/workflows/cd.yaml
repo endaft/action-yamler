@@ -43,16 +43,22 @@ jobs:
             echo "GIT_IS_DIRTY=false" >> $GITHUB_ENV
           fi
 
-      - name: 🏷️ Version
+      - name: 🙋‍♀️ Get Version
         if: env.GIT_IS_DIRTY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           LATEST_TAG=$(gh api repos/endaft/action-yamler/releases/latest --jq=.tag_name)
+          echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_ENV
+
+      - name: ✊ Bump Version
+        if: env.GIT_IS_DIRTY == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           IFS=. read -r v1 v2 v3 <<< "${LATEST_TAG}"    # split into (integer) components
           ((v3++))                                      # do the math
-          LATEST_TAG="${v1}.${v2}.${v3}"
-          echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_ENV
+          echo "LATEST_TAG=${v1}.${v2}.${v3}" >> $GITHUB_ENV
 
       - name: 🏷️ Tag
         if: env.GIT_IS_DIRTY == 'true'
