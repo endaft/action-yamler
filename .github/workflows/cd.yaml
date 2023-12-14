@@ -57,12 +57,4 @@ jobs:
           git commit -a -m "chore: updates dist js"
           git tag -f "$LATEST_TAG" -m "Version $LATEST_TAG"
           git tag -f latest -m "The latest version"
-
-      - name: 📌 Commit & Push
-        if: env.GIT_IS_DIRTY == 'true'
-        uses: GuillaumeFalourd/git-commit-push@v1.3
-        with:
-          name: github-actions[bot]
-          email: github-actions[bot]@users.noreply.github.com
-          tags: true
-          force: true
+          git push --follow-tags --force --tags
