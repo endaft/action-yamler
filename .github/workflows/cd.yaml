@@ -59,7 +59,7 @@ jobs:
           IFS=. read -r v1 v2 v3 <<< "${LATEST_TAG}"    # split into (integer) components
           echo "LATEST_TAG=${LATEST_TAG}"
           echo "LATEST_VERSION=${v1}.${v2}.${v3}"
-          ((v3++))                                      # do the math
+          v3=$((v3 + 1))                                # do the math
           echo "NEXT_VERSION=${v1}.${v2}.${v3}"
           echo "LATEST_TAG=${v1}.${v2}.${v3}" >> $GITHUB_ENV
 
